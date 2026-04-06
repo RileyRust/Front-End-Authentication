@@ -1,29 +1,48 @@
 ﻿@page "/"
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
 
-@inherits IndexBase
+<h3>Welcome</h3>
 
-<h3>Characters</h3>
-
-@if (Characters == null)
+@if (User is null || !User.Identity.IsAuthenticated)
 {
-    <p>Loading...</p>
-}
-else if (Characters.Count == 0)
-{
-    <p>No characters found.</p>
+    <p>No user logged in.</p>
+    <a href="/login">Go to Login</a>
 }
 else
 {
-    foreach (var character in Characters)
-    {
-        <div class="mb-3">
-            <p><strong>ID:</strong> @character.Id</p>
-            <p><strong>Name:</strong> @character.Name</p>
-            <p><strong>Class:</strong> @character.Class</p>
-        </div>
-    }
+    <p><b>User:</b> @User.Identity.Name</p>
+
+    <p><b>Permissions:</b></p>
+    <ul>
+        @foreach (var role in RolesList)
+        {
+            <li>@role</li>
+        }
+    </ul>
+
+    <h4>Actions</h4>
+
+    <button disabled="@(!HasPermission(Roles.ViewDashboard))">View Dashboard</button>
+    <button disabled="@(!HasPermission(Roles.EditUsers))">Edit Users</button>
+    <button disabled="@(!HasPermission(Roles.DeleteRecords))">Delete Records</button>
 }
 
-<button class="btn btn-primary" @onclick="LoadCharacters">
-    Reload
-</button>
+@code {
+    private ClaimsPrincipal User;
+    private List<string> RolesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        User = state.User;
+
+        RolesList = User.Claims
+            .Where(c => c.Type == "role")
+            .Select(c => c.Value)
+            .ToList();
+    }
+
+    private bool HasPermission(Roles role)
+        => User.Claims.Any(c => c.Type == "role" && c.Value == role.ToString());
+}

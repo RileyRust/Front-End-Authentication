@@ -31,16 +31,6 @@ builder.Services.AddScoped<CharacterService>();
 
 var app = builder.Build();
 
-// TEMP DB TEST (optional)
-using (var scope = app.Services.CreateScope())
-{
-    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var connString = config.GetConnectionString("DefaultConnection");
-    using var conn = new Npgsql.NpgsqlConnection(connString);
-    conn.Open();
-    Console.WriteLine("Connected to Postgres!");
-}
-
 app.UseCors();
 
 // Pipeline

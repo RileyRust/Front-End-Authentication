@@ -1,14 +1,24 @@
-using Front_EndAPI;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Front_EndAPI.Services;
 
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped(sp => new HttpClient
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<MockTokenService>();
+builder.Services.AddScoped<AuthenticationStateProvider, TokenAuthStateProvider>();
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
 {
-    BaseAddress = new Uri("https://localhost:7147/")
-});
+    app.UseExceptionHandler("/Error");
+}
 
-await builder.Build().RunAsync();
+app.UseStaticFiles();
+app.UseRouting();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+app.Run();

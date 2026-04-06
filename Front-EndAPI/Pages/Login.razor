@@ -1,0 +1,37 @@
+﻿@page "/login"
+@inject MockTokenService TokenService
+@inject TokenAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<input @bind="Username" placeholder="Username" />
+<br />
+<input @bind="Password" placeholder="Password" type="password" />
+<br />
+<button @onclick="Login">Login</button>
+
+@if (Error != null)
+{
+    <p style="color:red">@Error</p>
+}
+
+@code {
+    private string Username;
+    private string Password;
+    private string Error;
+
+    private void Login()
+    {
+        if (MockUsers.Users.TryGetValue(Username, out var user) && user.Password == Password)
+        {
+            var token = TokenService.GenerateToken(Username, user.Roles);
+            AuthProvider.SetToken(token);
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            Error = "Invalid username or password";
+        }
+    }
+}
